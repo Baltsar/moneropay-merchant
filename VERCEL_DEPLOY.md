@@ -17,10 +17,10 @@
 
 3. **New Project** → Importera ditt GitHub-repo.
 
-4. **Viktiga inställningar:**
-   - **Root Directory:** klicka "Edit" och sätt till `frontend`.
-   - **Build Command:** `npm run build` (förvalt).
-   - **Output Directory:** `dist` (förvalt).
+4. **Viktiga inställningar (om du inte kan ändra Root Directory):**
+   - **Root Directory:** behåll `./` (repo-roten).
+   - **Build Command:** slå på toggle och sätt till `npm run build`.
+   - **Output Directory:** slå på toggle och sätt till `frontend/dist`.
    - **Environment Variables:** klicka "Add" och lägg till:
      - Name: `VITE_USE_MOCK`  
      - Value: `true`  

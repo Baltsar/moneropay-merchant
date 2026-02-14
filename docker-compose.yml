@@ -1,0 +1,105 @@
+services:
+  monerod:
+    image: sethforprivacy/simple-monerod:latest
+    restart: unless-stopped
+    volumes:
+      - monero-data:/home/monero/.bitmonero
+    command: >
+      --rpc-bind-ip=0.0.0.0
+      --rpc-bind-port=18081
+      --rpc-restricted-bind-ip=0.0.0.0
+      --rpc-restricted-bind-port=18089
+      --no-igd
+      --no-zmq
+      --enable-dns-blocklist
+      --prune-blockchain
+      --sync-pruned-blocks
+      --confirm-external-bind
+    ports:
+      - "18080:18080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:18089/get_info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - local
+
+  wallet-rpc:
+    image: sethforprivacy/simple-monerod:latest
+    entrypoint: monero-wallet-rpc
+    restart: unless-stopped
+    command: >
+      --wallet-dir=/wallet
+      --disable-rpc-login
+      --rpc-bind-ip=0.0.0.0
+      --rpc-bind-port=28081
+      --daemon-host=$${DAEMON_HOST:-monerod}
+      --daemon-port=$${DAEMON_PORT:-18081}
+      --trusted-daemon
+      --non-interactive
+    volumes:
+      - wallet-data:/wallet
+    depends_on:
+      monerod:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:28081/json_rpc", "-d", "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_version\"}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgresql:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  moneropay:
+    image: registry.gitlab.com/moneropay/moneropay:v2
+    restart: unless-stopped
+    depends_on:
+      wallet-rpc:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    environment:
+      - BIND=${MONEROPAY_BIND:-0.0.0.0:5000}
+      - RPC_ADDRESS=http://wallet-rpc:28081/json_rpc
+      - POSTGRESQL=postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DATABASE}?sslmode=disable
+      - ZERO_CONF=${MONEROPAY_ZERO_CONF:-false}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  dashboard:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-3000}:80"
+    depends_on:
+      moneropay:
+        condition: service_healthy
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    environment:
+      - NODE_MODE=${NODE_MODE:-local}
+
+volumes:
+  monero-data:
+  wallet-data:
+  postgres-data:

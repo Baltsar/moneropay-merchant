@@ -1,0 +1,4 @@
+# Local overrides (e.g. DAEMON_HOST/DAEMON_PORT for remote node)
+# When NODE_MODE=remote, set in .env:
+#   DAEMON_HOST=node.moneroworld.com
+#   DAEMON_PORT=18089

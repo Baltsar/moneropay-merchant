@@ -2,9 +2,13 @@
 
 A merchant-facing payment dashboard for accepting Monero payments. Powered by [MoneroPay](https://moneropay.eu).
 
+**[→ Try the demo](https://moneropay-merchant.vercel.app/)** — click around with mock data, no install.
+
 The dashboard shows balance, recent payments, **Receive** (create payment requests with QR/address), and **Send** (withdraw XMR). It runs in Docker alongside MoneroPay, wallet-rpc, and optionally your own node or a remote node.
 
 ## Before you start
+
+**Try the demo (no install):** You can deploy a **clickable demo** so others can try the dashboard with mock data in the browser — no backend, no Docker. Deploy from this same repo (frontend only, `VITE_USE_MOCK=true`). See [docs/DEMO_DEPLOY.md](./docs/DEMO_DEPLOY.md) (e.g. Vercel). The demo stays updated on every push.
 
 **Setup flow:** For the full path from zero to a merchant accepting payments (including Tailscale so only the merchant can reach the dashboard URL), see [FLOW.md](./FLOW.md). Use it before building or installing.
 

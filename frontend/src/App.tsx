@@ -11,7 +11,7 @@ import { Send } from '@/pages/Send'
 import { Settings } from '@/pages/Settings'
 
 function SyncGate({ children }: { children: React.ReactNode }) {
-  const { data: health } = useHealth()
+  const { data: health, isLoading: healthLoading } = useHealth()
   const { data: syncStatus } = useSyncStatus()
 
   const isMoneroPayReachable = health !== undefined
@@ -19,6 +19,16 @@ function SyncGate({ children }: { children: React.ReactNode }) {
   const isDbUp = health?.services?.postgresql === true
   const isNodeSynced = NODE_MODE === 'remote' || (syncStatus as GetInfoResult | undefined)?.synchronized === true
   const isSystemReady = isMoneroPayReachable && isWalletRpcUp && isDbUp && isNodeSynced
+
+  if (healthLoading && health === undefined) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
+        <div className="text-center text-text-secondary">
+          <p className="text-lg">Loading…</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!isSystemReady) {
     return <Onboarding />

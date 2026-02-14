@@ -1,6 +1,7 @@
 import { CONFIRMATIONS_REQUIRED, MIN_PER_CONFIRMATION } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { Check, Radio, Loader2 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type Phase = 'detected' | 'confirming' | 'complete'
 
@@ -19,6 +20,7 @@ export function ConfirmationProgress({
   locked: boolean
   className?: string
 }) {
+  const { t } = useTranslation()
   const phase = getPhase(confirmations, locked)
   const remainingMin = Math.max(0, (CONFIRMATIONS_REQUIRED - confirmations) * MIN_PER_CONFIRMATION)
 
@@ -38,8 +40,8 @@ export function ConfirmationProgress({
             <Radio className="h-6 w-6 animate-pulse text-accent" />
           </span>
           <div>
-            <p className="font-medium text-accent">Payment Detected</p>
-            <p className="text-sm text-text-secondary">Transaction seen on network</p>
+            <p className="font-medium text-accent">{t('paymentDetected')}</p>
+            <p className="text-sm text-text-secondary">{t('transactionSeen')}</p>
           </div>
         </>
       )}
@@ -50,10 +52,10 @@ export function ConfirmationProgress({
           </span>
           <div>
             <p className="font-medium text-text-primary">
-              Confirming ({confirmations}/{CONFIRMATIONS_REQUIRED})
+              {t('confirmingProgress')} ({confirmations}/{CONFIRMATIONS_REQUIRED})
             </p>
             <p className="text-sm text-text-secondary">
-              {confirmations} of {CONFIRMATIONS_REQUIRED} confirmations • ~{remainingMin} min remaining
+              {t('confirmationsOf', { current: confirmations, required: CONFIRMATIONS_REQUIRED, min: remainingMin })}
             </p>
           </div>
         </>
@@ -64,8 +66,8 @@ export function ConfirmationProgress({
             <Check className="h-5 w-5 text-success" />
           </span>
           <div>
-            <p className="font-medium text-success">Payment Complete</p>
-            <p className="text-sm text-text-secondary">Fully confirmed and unlocked</p>
+            <p className="font-medium text-success">{t('paymentComplete')}</p>
+            <p className="text-sm text-text-secondary">{t('fullyConfirmed')}</p>
           </div>
         </>
       )}

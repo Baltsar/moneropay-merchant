@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { XMRAmount } from '@/components/shared/XMRAmount'
 import { Copy, Check } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function PaymentStatus({
   address,
@@ -19,6 +20,7 @@ export function PaymentStatus({
   description?: string
   onNewPayment: () => void
 }) {
+  const { t } = useTranslation()
   const { data, isLoading, isError, refetch, isFetching } = usePaymentStatus(address, true)
   const [copied, setCopied] = useState<'address' | 'amount' | null>(null)
 
@@ -58,7 +60,7 @@ export function PaymentStatus({
             onClick={() => copy(address, 'address')}
           >
             {copied === 'address' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            Copy
+            {t('copyLabel')}
           </Button>
           <span className="text-text-secondary">|</span>
           <XMRAmount piconero={amountPiconero} />
@@ -68,13 +70,13 @@ export function PaymentStatus({
             onClick={() => copy((amountPiconero / 1e12).toFixed(12), 'amount')}
           >
             {copied === 'amount' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            Copy
+            {t('copyLabel')}
           </Button>
         </div>
         {!complete && (
           <p className="flex items-center gap-2 text-sm text-text-secondary">
             <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-            Waiting for payment...
+            {t('waitingForPayment')}
           </p>
         )}
       </div>
@@ -82,14 +84,14 @@ export function PaymentStatus({
       {partial && !complete && (
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-sm font-medium text-text-primary">
-            {description ?? 'Payment'} — Partial
+            {description ?? t('receive')} — {t('partial')}
           </p>
           <Progress value={partialPct} className="my-2 h-2" />
           <p className="text-sm text-text-secondary">
             <XMRAmount piconero={data!.amount.covered.total} suffix="" /> /{' '}
             <XMRAmount piconero={data!.amount.expected} suffix="" /> XMR ({partialPct.toFixed(0)}%)
           </p>
-          <p className="text-xs text-text-secondary">Waiting for more...</p>
+          <p className="text-xs text-text-secondary">{t('waitingForMore')}</p>
         </div>
       )}
 
@@ -99,20 +101,20 @@ export function PaymentStatus({
 
       {complete && (
         <div className="rounded-lg border border-success/50 bg-success/10 p-4 text-center">
-          <p className="font-medium text-success">Payment Complete</p>
+          <p className="font-medium text-success">{t('paymentComplete')}</p>
           <Button className="mt-2" onClick={onNewPayment}>
-            New Payment
+            {t('newPayment')}
           </Button>
         </div>
       )}
 
       {isLoading && !data && (
-        <p className="text-center text-sm text-text-secondary">Loading status...</p>
+        <p className="text-center text-sm text-text-secondary">{t('loadingStatus')}</p>
       )}
 
       {isError && (
         <div className="rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-center">
-          <p className="text-sm text-danger">Trouble loading status. Refresh or try again.</p>
+          <p className="text-sm text-danger">{t('troubleLoadingStatus')}</p>
           <Button
             variant="outline"
             size="sm"
@@ -120,7 +122,7 @@ export function PaymentStatus({
             onClick={() => refetch()}
             disabled={isFetching}
           >
-            {isFetching ? 'Retrying…' : 'Retry'}
+            {isFetching ? t('retrying') : t('retry')}
           </Button>
         </div>
       )}

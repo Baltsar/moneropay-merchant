@@ -1,8 +1,23 @@
 node_modules
 dist
+build
 .env
 .env.local
+.env.*.local
 *.log
 .DS_Store
 .idea
 .vscode
+
+# Docker / runtime data (do not commit)
+wallet-data
+monero-data
+postgres-data
+
+# Internal / do not push to public repo
+VERCEL_DEPLOY.md
+MONEROPAY_DASHBOARD_CURSOR_PROMPT.md
+NEXT.md
+SETTINGS_COPY_OVERVIEW.md
+docs/FEEDBACK_*.md
+docs/OPTION_B_TEST_RUN_LOG.md

@@ -16,6 +16,7 @@ export function xmrToPiconero(xmr: number): number {
 }
 
 export function formatXMR(piconero: number): string {
+  if (typeof piconero !== 'number' || !Number.isFinite(piconero)) return '0.0000'
   const xmr = piconero / PICONERO_PER_XMR
   return xmr.toFixed(4)
 }

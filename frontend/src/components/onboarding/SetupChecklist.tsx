@@ -3,6 +3,7 @@ import type { GetInfoResult } from '@/api/node'
 import { calcSyncProgress } from '@/hooks/useSyncStatus'
 import { Check, CircleAlert, Loader2 } from 'lucide-react'
 import { NODE_MODE } from '@/lib/constants'
+import { useTranslation } from '@/hooks/useTranslation'
 
 function StatusRow({
   label,
@@ -37,6 +38,7 @@ export function SetupChecklist({
   health: HealthResponse | undefined
   syncStatus: GetInfoResult | undefined
 }) {
+  const { t } = useTranslation()
   const dbUp = health?.services?.postgresql === true
   const walletUp = health?.services?.walletrpc === true
   const moneropayUp = health?.status === 200
@@ -48,15 +50,15 @@ export function SetupChecklist({
 
   return (
     <div className="space-y-1 rounded-lg border border-border bg-surface p-4">
-      <StatusRow label="Database" ok={dbUp} loading={health === undefined} />
-      <StatusRow label="Wallet Service" ok={walletUp} loading={health !== undefined && !walletUp && dbUp} />
+      <StatusRow label={t('database')} ok={dbUp} loading={health === undefined} />
+      <StatusRow label={t('walletService')} ok={walletUp} loading={health !== undefined && !walletUp && dbUp} />
       <StatusRow label="MoneroPay" ok={moneropayUp} loading={walletUp && !moneropayUp} />
       {NODE_MODE === 'local' && (
         <StatusRow
-          label="Monero Node"
+          label={t('moneroNode')}
           ok={nodeSynced}
           loading={!!syncStatus && !syncStatus.synchronized}
-          detail={nodeProgress != null ? `Syncing (${nodeProgress}%)` : undefined}
+          detail={nodeProgress != null ? t('syncingPct', { pct: nodeProgress }) : undefined}
         />
       )}
     </div>

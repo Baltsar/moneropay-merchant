@@ -10,9 +10,10 @@ export function XMRAmount({
   className?: string
   suffix?: string
 }) {
+  const safe = typeof piconero === 'number' && Number.isFinite(piconero) ? piconero : 0
   return (
     <span className={cn('font-mono tabular-nums', className)}>
-      {formatXMR(piconero)}
+      {formatXMR(safe)}
       {suffix}
     </span>
   )

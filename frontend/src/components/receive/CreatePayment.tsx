@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { xmrToPiconero } from '@/lib/utils'
 import { useXMRPrice } from '@/hooks/useXMRPrice'
 import { useFiatCurrency } from '@/context/FiatCurrencyContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function CreatePayment({
   onCreated,
@@ -17,6 +18,7 @@ export function CreatePayment({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const { t } = useTranslation()
   const { fiatCurrency } = useFiatCurrency()
   const { data: priceMap } = useXMRPrice()
   const rate = priceMap?.[fiatCurrency.toLowerCase()] ?? priceMap?.usd ?? 0
@@ -30,11 +32,10 @@ export function CreatePayment({
   const amountFiat = amountXMR * (rate || 0)
   const amountPiconero = xmrToPiconero(amountXMR)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitCreate = async () => {
     setError(null)
     if (amountPiconero <= 0) {
-      setError('Enter a valid amount')
+      setError(t('enterValidAmount'))
       return
     }
     setLoading(true)
@@ -50,17 +51,22 @@ export function CreatePayment({
         description: description || undefined,
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create payment')
+      setError(err instanceof Error ? err.message : t('failedToCreatePayment'))
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    submitCreate()
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base font-medium text-text-secondary">
-          Request Payment
+          {t('createPaymentRequest')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -97,17 +103,24 @@ export function CreatePayment({
             </p>
           </div>
           <div>
-            <label className="text-sm text-text-secondary">Description (optional)</label>
+            <label className="text-sm text-text-secondary">{t('descriptionOptional')}</label>
             <Input
               className="mt-1"
-              placeholder="Order #1042"
+              placeholder={t('orderPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && (
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm text-danger">{error}</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => submitCreate()} disabled={loading}>
+                {t('retry')}
+              </Button>
+            </div>
+          )}
           <Button type="submit" disabled={loading || amountPiconero <= 0}>
-            {loading ? 'Creating...' : 'Create Payment Request'}
+            {loading ? t('creating') : t('createPaymentRequest')}
           </Button>
         </form>
       </CardContent>

@@ -9,10 +9,22 @@ import { xmrToPiconero } from '@/lib/utils'
 import { XMRAmount } from '@/components/shared/XMRAmount'
 import { FiatAmount } from '@/components/shared/FiatAmount'
 import { CONFIRMATIONS_REQUIRED, MIN_PER_CONFIRMATION } from '@/lib/constants'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useRecentPayments } from '@/context/RecentPaymentsContext'
+
+const ESTIMATED_FEE_PICONERO = Math.round(0.0001 * 1e12)
+const MONERO_ADDRESS_LENGTHS = [95, 97, 106] as const
+const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 function validateAddress(addr: string): boolean {
-  if (addr.length < 90 || addr.length > 100) return false
-  return addr.startsWith('4') || addr.startsWith('8')
+  const t = addr.trim()
+  if (t.length === 0) return true
+  if (!MONERO_ADDRESS_LENGTHS.includes(t.length as 95 | 97 | 106)) return false
+  if (t[0] !== '4' && t[0] !== '8') return false
+  for (let i = 0; i < t.length; i++) {
+    if (!BASE58.includes(t[i])) return false
+  }
+  return true
 }
 
 export function SendForm() {
@@ -24,7 +36,10 @@ export function SendForm() {
   const [result, setResult] = useState<{ txHash: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [transferFailed, setTransferFailed] = useState(false)
+  const [addressTouched, setAddressTouched] = useState(false)
 
+  const { t } = useTranslation()
+  const { addSend } = useRecentPayments()
   const { fiatCurrency } = useFiatCurrency()
   const { data: priceMap } = useXMRPrice()
   const { data: balance, isLoading: balanceLoading } = useBalance()
@@ -42,22 +57,29 @@ export function SendForm() {
   const insufficient = amountPiconero > 0 && amountPiconero > unlocked
   const lockedMin = locked > 0 ? Math.ceil((CONFIRMATIONS_REQUIRED * MIN_PER_CONFIRMATION) / 2) : 0
   const addressValid = address.trim() === '' || validateAddress(address.trim())
+  const maxSpendable = Math.max(0, unlocked - ESTIMATED_FEE_PICONERO)
+  const pendingTx = unlocked === 0 && locked > 0
 
   const handleReview = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setTransferFailed(false)
-    if (!addressValid || address.trim().length < 90) {
-      setError('Invalid Monero address')
+    if (!addressValid || address.trim().length === 0) {
+      setError(t('invalidMoneroAddress'))
+      setAddressTouched(true)
       return
     }
     if (amountPiconero <= 0) {
-      setError('Enter a valid amount')
+      setError(t('enterValidAmountSend'))
       return
     }
     if (insufficient) {
       setError(
-        `Insufficient spendable balance. You have ${(unlocked / 1e12).toFixed(4)} XMR unlocked but ${(locked / 1e12).toFixed(4)} XMR is still confirming (~${lockedMin} min).`
+        t('insufficientBalance', {
+          unlocked: (unlocked / 1e12).toFixed(4),
+          locked: (locked / 1e12).toFixed(4),
+          min: lockedMin,
+        })
       )
       return
     }
@@ -72,13 +94,18 @@ export function SendForm() {
       const res = await moneropayApi.postTransfer({
         destinations: [{ amount: amountPiconero, address: address.trim() }],
       })
+      addSend({
+        txHash: res.tx_hash,
+        amount: res.amount,
+        destinationAddress: res.destinations?.[0]?.address ?? address.trim(),
+      })
       setResult({ txHash: res.tx_hash })
       setConfirmOpen(false)
       setAddress('')
       setAmountInput('')
     } catch (err) {
       setTransferFailed(true)
-      setError(err instanceof Error ? err.message : 'Transfer failed')
+      setError(err instanceof Error ? err.message : t('transferFailed'))
       setConfirmOpen(false)
     } finally {
       setSending(false)
@@ -89,7 +116,7 @@ export function SendForm() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-medium text-success">Sent</CardTitle>
+          <CardTitle className="text-base font-medium text-success">{t('sent')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="font-mono text-sm text-text-primary break-all">{result.txHash}</p>
@@ -99,10 +126,10 @@ export function SendForm() {
             size="sm"
             onClick={() => navigator.clipboard.writeText(result.txHash)}
           >
-            Copy tx_hash
+            {t('copyTxHash')}
           </Button>
           <Button className="mt-2 ml-2" variant="secondary" onClick={() => setResult(null)}>
-            Send again
+            {t('sendAgain')}
           </Button>
         </CardContent>
       </Card>
@@ -112,20 +139,26 @@ export function SendForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base font-medium text-text-secondary">Send XMR</CardTitle>
+        <CardTitle className="text-base font-medium text-text-secondary">{t('sendXMR')}</CardTitle>
       </CardHeader>
       <CardContent>
+        {pendingTx && (
+          <p className="mb-4 rounded-lg border border-border bg-surface-hover px-4 py-3 text-sm text-text-secondary">
+            {t('pendingTxMessage')}
+          </p>
+        )}
         <form onSubmit={handleReview} className="space-y-4">
           <div>
-            <label className="text-sm text-text-secondary">Recipient Address</label>
+            <label className="text-sm text-text-secondary">{t('recipientAddress')}</label>
             <Input
               className="mt-1 font-mono text-sm"
-              placeholder="4 or 8..."
+              placeholder={t('addressPlaceholder')}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              onBlur={() => setAddressTouched(true)}
             />
-            {address.length > 0 && !addressValid && (
-              <p className="mt-1 text-sm text-danger">Invalid Monero address</p>
+            {(addressTouched || address.trim().length > 0) && !addressValid && address.trim().length > 0 && (
+              <p className="mt-1 text-sm text-danger">{t('invalidMoneroAddress')}</p>
             )}
           </div>
           <div>
@@ -146,16 +179,32 @@ export function SendForm() {
               </button>
             </div>
             <label className="text-sm text-text-secondary">
-              Amount {isXMR ? '(XMR)' : `(${fiatCurrency})`}
+              {t('amount')} {isXMR ? '(XMR)' : `(${fiatCurrency})`}
             </label>
-            <Input
-              type="number"
-              step={isXMR ? '0.0001' : '0.01'}
-              min="0"
-              placeholder={isXMR ? '0.3500' : '50.00'}
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-            />
+            <div className="flex gap-2 items-center">
+              <Input
+                type="number"
+                step={isXMR ? '0.0001' : '0.01'}
+                min="0"
+                placeholder={isXMR ? '0.3500' : '50.00'}
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsXMR(true)
+                  setAmountInput((maxSpendable / 1e12).toFixed(4))
+                }}
+                disabled={balanceLoading || maxSpendable <= 0}
+                title={t('sendMaxTitle')}
+              >
+                {t('sendMax')}
+              </Button>
+            </div>
             <p className="mt-1 text-sm text-text-secondary">
               {isXMR
                 ? amountPiconero > 0 && (
@@ -171,20 +220,20 @@ export function SendForm() {
             </p>
           </div>
           {balanceLoading && !balance && (
-            <p className="text-sm text-text-secondary">Loading balance…</p>
+            <p className="text-sm text-text-secondary">{t('loadingBalance')}</p>
           )}
           {balance && (
             <p className="text-sm text-text-secondary">
-              Available: <XMRAmount piconero={balance.unlocked} /> (spendable)
+              {t('available')}: <XMRAmount piconero={balance.unlocked} /> {t('spendable')}
             </p>
           )}
-          <p className="text-xs text-text-secondary">Estimated fee: ~0.0001 XMR</p>
+          <p className="text-xs text-text-secondary">{t('estimatedFee')}</p>
           {error && (
             <div className="space-y-1">
               <p className="text-sm text-danger">{error}</p>
               {transferFailed && (
                 <p className="text-sm text-text-secondary">
-                  Your funds were not sent. You can try again.
+                  {t('fundsNotSent')}
                 </p>
               )}
             </div>
@@ -195,10 +244,11 @@ export function SendForm() {
               balanceLoading ||
               !addressValid ||
               amountPiconero <= 0 ||
-              insufficient
+              insufficient ||
+              pendingTx
             }
           >
-            Review Transaction
+            {t('reviewTransaction')}
           </Button>
         </form>
 
@@ -207,13 +257,16 @@ export function SendForm() {
             <p className="text-sm text-text-primary">
               Send <XMRAmount piconero={amountPiconero} /> to {address.slice(0, 8)}...{address.slice(-6)}?
             </p>
-            <p className="text-sm text-text-secondary">Estimated fee: ~0.0001 XMR</p>
+            <p className="text-sm text-text-secondary">{t('estimatedFee')}</p>
             <div className="mt-3 flex gap-2">
               <Button onClick={handleSend} disabled={sending}>
-                {sending ? 'Sending...' : 'Confirm Send'}
+                {sending ? t('sending') : t('confirmSend')}
               </Button>
               <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={sending}>
-                Cancel
+                {t('edit')}
+              </Button>
+              <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={sending}>
+                {t('cancel')}
               </Button>
             </div>
           </div>

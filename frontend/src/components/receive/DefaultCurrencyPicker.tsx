@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button'
 import { useXMRPrice } from '@/hooks/useXMRPrice'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function DefaultCurrencyPicker() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const { fiatCurrency, setFiatCurrency } = useFiatCurrency()
   const { data: priceMap } = useXMRPrice()
@@ -21,7 +23,7 @@ export function DefaultCurrencyPicker() {
     <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
       <div>
         <p className="text-xs uppercase tracking-wide text-text-secondary">
-          Default currency
+          {t('defaultCurrency')}
         </p>
         <p className="font-medium text-text-primary">
           {FIAT_CURRENCIES.find((c) => c.code === fiatCurrency)?.name ?? fiatCurrency}{' '}
@@ -31,17 +33,17 @@ export function DefaultCurrencyPicker() {
         </p>
       </div>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Change
+        {t('change')}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          title="Choose default currency"
+          title={t('chooseDefaultCurrency')}
           onClose={() => setOpen(false)}
           className="sm:max-w-md"
         >
           <p className="text-sm text-text-secondary -mt-2">
-            Used for amounts and conversion on the Receive screen. Rate from CoinGecko.
+            {t('defaultCurrencyDialogHint')}
           </p>
           <div className="grid grid-cols-2 gap-2 pt-2">
             {FIAT_CURRENCIES.map((c) => {

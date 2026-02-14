@@ -81,18 +81,27 @@ Three ways to run and test, from **fastest** (no backend) to **full** (VPS or lo
    curl -s http://localhost:3000/api/health
    ```
 
-5. Open **http://localhost:3000** (or the port in `DASHBOARD_PORT`).
+5. **Open the wallet after wallet-rpc is up (remote mode)**  
+   wallet-rpc does not auto-open the wallet. So after starting the stack—or after any `docker compose restart wallet-rpc`—run once:
 
-6. **First run:** Wallet may need to be created/restored by MoneroPay/wallet-rpc (see MoneroPay docs). Onboarding may show “Setting up…” then dashboard (no sync screen for remote). You may see the **remote node privacy** (yellow) banner.
+   ```bash
+   ./scripts/open-wallet.sh
+   ```
 
-7. **What you can test**
+   This opens the default wallet so MoneroPay and the dashboard report healthy. If you skip this, the dashboard may show “Cannot reach MoneroPay” or the API health will show `walletrpc: false`. Optional: pass a different URL, e.g. `./scripts/open-wallet.sh http://127.0.0.1:28081`.
+
+6. Open **http://localhost:3000** (or the port in `DASHBOARD_PORT`).
+
+7. **First run:** Wallet may need to be created/restored by MoneroPay/wallet-rpc (see MoneroPay docs). Onboarding may show “Setting up…” then dashboard (no sync screen for remote). You may see the **remote node privacy** (yellow) banner.
+
+8. **What you can test**
    - Everything from Option A, but with real balance (likely 0) and real create/receive/send (if you have a test wallet with funds).
    - **Balance error + retry:** Stop MoneroPay (`docker compose stop moneropay`) → reload dashboard → balance fails → “Couldn’t load balance” + Retry in card and TopBar. Start MoneroPay again and retry.
    - **Remote node unreachable:** Set in .env a wrong `REMOTE_NODE_HOST` or stop the remote node from being reachable, rebuild/restart, then open dashboard → red “Remote node unreachable” banner when health/wallet fails.
    - **Receive status error + retry:** Create a payment, then stop MoneroPay → on Receive page you should get “Trouble loading status” + Retry. Start MoneroPay and Retry.
    - **Send:** Only if wallet has unlocked balance; otherwise you’ll get insufficient balance (and can test that message). If you send to a real address, you get real tx_hash.
 
-8. **Rebuild dashboard after .env change**
+9. **Rebuild dashboard after .env change**
 
    If you change `NODE_MODE` or other settings that affect the frontend build:
 

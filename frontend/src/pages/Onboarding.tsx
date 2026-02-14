@@ -9,10 +9,12 @@ import { SetupChecklist } from '@/components/onboarding/SetupChecklist'
 import { SyncProgress } from '@/components/onboarding/SyncProgress'
 import { WalletBackup } from '@/components/onboarding/WalletBackup'
 import { CircleAlert } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const BACKUP_ACK_KEY = 'moneropay_backup_acknowledged'
 
 export function Onboarding() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: health, isError: healthError } = useHealth()
   const { data: syncStatus, eta, blocksPerSec } = useSyncStatus()
@@ -53,7 +55,7 @@ export function Onboarding() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
         <div className="text-center text-success">
-          <p className="text-2xl font-semibold">Ready!</p>
+          <p className="text-2xl font-semibold">{t('ready')}</p>
         </div>
       </div>
     )
@@ -72,16 +74,16 @@ export function Onboarding() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
         <div className="max-w-md space-y-4 text-center">
           <CircleAlert className="mx-auto h-12 w-12 text-warning" />
-          <h2 className="text-xl font-semibold text-text-primary">Cannot reach MoneroPay</h2>
+          <h2 className="text-xl font-semibold text-text-primary">{t('cannotReachMoneropay')}</h2>
           <p className="text-text-secondary">
-            Make sure all services are running:
+            {t('makeSureServices')}
           </p>
           <code className="block rounded bg-surface px-4 py-2 font-mono text-sm text-text-primary">
             docker compose up -d
           </code>
-          <p className="text-sm text-text-secondary">Checking again in 10 seconds...</p>
+          <p className="text-sm text-text-secondary">{t('checkingAgain')}</p>
           <p className="text-sm text-text-secondary">
-            If this persists, check that the server is running and the URL is correct.
+            {t('onboardingHint')}
           </p>
         </div>
       </div>
@@ -104,11 +106,11 @@ export function Onboarding() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
         <div className="w-full max-w-md space-y-6">
           <h2 className="text-center text-xl font-semibold text-text-primary">
-            Setting up your payment system
+            {t('onboardingTitle')}
           </h2>
           <SetupChecklist health={health as HealthResponse | undefined} syncStatus={sync} />
           <p className="text-center text-sm text-text-secondary">
-            This usually takes 1-2 minutes.
+            {t('thisUsuallyTakes')}
           </p>
         </div>
       </div>

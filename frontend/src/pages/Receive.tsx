@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CreatePayment } from '@/components/receive/CreatePayment'
+import { DefaultCurrencyPicker } from '@/components/receive/DefaultCurrencyPicker'
 import { PaymentStatus } from '@/components/receive/PaymentStatus'
 import { useRecentPayments } from '@/context/RecentPaymentsContext'
 
@@ -37,6 +38,7 @@ export function Receive() {
   return (
     <div className="mx-auto max-w-md space-y-6">
       <h1 className="text-xl font-semibold text-text-primary">Receive</h1>
+      <DefaultCurrencyPicker />
       <CreatePayment onCreated={handleCreated} />
     </div>
   )

@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { XMRAmount } from '@/components/shared/XMRAmount'
+import { StatusHelpIcon, type PaymentStatusType } from '@/components/shared/StatusHelpIcon'
+import { useRecentPayments } from '@/context/RecentPaymentsContext'
 import { CONFIRMATIONS_REQUIRED } from '@/lib/constants'
+import { Trash2 } from 'lucide-react'
 
-type PaymentStatus = 'complete' | 'confirming' | 'double_spend' | 'waiting'
+type PaymentStatus = PaymentStatusType
 
 function getStatus(
   complete: boolean,
@@ -25,6 +28,7 @@ export interface RecentPaymentItem {
 }
 
 export function RecentPayments({ payments }: { payments: RecentPaymentItem[] }) {
+  const { removePayment } = useRecentPayments()
   const list = payments.slice(0, 20)
 
   return (
@@ -53,23 +57,37 @@ export function RecentPayments({ payments }: { payments: RecentPaymentItem[] }) 
                       <p className="text-xs text-text-secondary">{p.description}</p>
                     )}
                   </div>
-                  <Badge
-                    variant={
-                      status === 'complete'
-                        ? 'success'
-                        : status === 'double_spend'
-                          ? 'danger'
-                          : status === 'confirming'
-                            ? 'warning'
-                            : 'secondary'
-                    }
-                    className={status === 'double_spend' ? 'animate-pulse' : ''}
-                  >
-                    {status === 'complete' && 'Complete'}
-                    {status === 'confirming' && `${conf}/${CONFIRMATIONS_REQUIRED}`}
-                    {status === 'double_spend' && 'Double Spend'}
-                    {status === 'waiting' && 'Waiting'}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge
+                      variant={
+                        status === 'complete'
+                          ? 'success'
+                          : status === 'double_spend'
+                            ? 'danger'
+                            : status === 'confirming'
+                              ? 'warning'
+                              : 'secondary'
+                      }
+                      className={status === 'double_spend' ? 'animate-pulse' : ''}
+                    >
+                      {status === 'complete' && 'Complete'}
+                      {status === 'confirming' && `${conf}/${CONFIRMATIONS_REQUIRED}`}
+                      {status === 'double_spend' && 'Double Spend'}
+                      {status === 'waiting' && 'Waiting'}
+                    </Badge>
+                    <StatusHelpIcon status={status} />
+                    {status === 'waiting' && (
+                      <button
+                        type="button"
+                        onClick={() => removePayment(p.address)}
+                        className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+                        title="Remove from list"
+                        aria-label="Remove from list"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </li>
               )
             })}

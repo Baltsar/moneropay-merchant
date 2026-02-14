@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useBalance } from '@/hooks/useBalance'
+import { useFiatCurrency } from '@/context/FiatCurrencyContext'
+import { useXMRPrice } from '@/hooks/useXMRPrice'
 import { xmrToPiconero } from '@/lib/utils'
 import { XMRAmount } from '@/components/shared/XMRAmount'
 import { FiatAmount } from '@/components/shared/FiatAmount'
@@ -15,14 +17,26 @@ function validateAddress(addr: string): boolean {
 
 export function SendForm() {
   const [address, setAddress] = useState('')
-  const [amountXMR, setAmountXMR] = useState('')
+  const [amountInput, setAmountInput] = useState('')
+  const [isXMR, setIsXMR] = useState(true)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ txHash: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [transferFailed, setTransferFailed] = useState(false)
 
-  const { data: balance } = useBalance()
-  const amountPiconero = xmrToPiconero(parseFloat(amountXMR) || 0)
+  const { fiatCurrency } = useFiatCurrency()
+  const { data: priceMap } = useXMRPrice()
+  const { data: balance, isLoading: balanceLoading } = useBalance()
+  const rate = priceMap?.[fiatCurrency.toLowerCase()] ?? priceMap?.usd ?? 0
+
+  const amountXMRNum = (() => {
+    const n = parseFloat(amountInput)
+    if (Number.isNaN(n) || n < 0) return 0
+    if (isXMR) return n
+    return rate > 0 ? n / rate : 0
+  })()
+  const amountPiconero = xmrToPiconero(amountXMRNum)
   const unlocked = balance?.unlocked ?? 0
   const locked = balance?.locked ?? 0
   const insufficient = amountPiconero > 0 && amountPiconero > unlocked
@@ -32,6 +46,7 @@ export function SendForm() {
   const handleReview = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setTransferFailed(false)
     if (!addressValid || address.trim().length < 90) {
       setError('Invalid Monero address')
       return
@@ -60,9 +75,11 @@ export function SendForm() {
       setResult({ txHash: res.tx_hash })
       setConfirmOpen(false)
       setAddress('')
-      setAmountXMR('')
+      setAmountInput('')
     } catch (err) {
+      setTransferFailed(true)
       setError(err instanceof Error ? err.message : 'Transfer failed')
+      setConfirmOpen(false)
     } finally {
       setSending(false)
     }
@@ -112,25 +129,75 @@ export function SendForm() {
             )}
           </div>
           <div>
-            <label className="text-sm text-text-secondary">Amount (XMR)</label>
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setIsXMR(false)}
+                className={`rounded px-3 py-1 text-sm ${!isXMR ? 'bg-accent text-white' : 'bg-surface-hover text-text-secondary'}`}
+              >
+                {fiatCurrency}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsXMR(true)}
+                className={`rounded px-3 py-1 text-sm ${isXMR ? 'bg-accent text-white' : 'bg-surface-hover text-text-secondary'}`}
+              >
+                XMR
+              </button>
+            </div>
+            <label className="text-sm text-text-secondary">
+              Amount {isXMR ? '(XMR)' : `(${fiatCurrency})`}
+            </label>
             <Input
               type="number"
-              step="0.0001"
+              step={isXMR ? '0.0001' : '0.01'}
               min="0"
-              placeholder="0.3500"
-              value={amountXMR}
-              onChange={(e) => setAmountXMR(e.target.value)}
+              placeholder={isXMR ? '0.3500' : '50.00'}
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
             />
-            {amountPiconero > 0 && <FiatAmount piconero={amountPiconero} className="block mt-1" />}
+            <p className="mt-1 text-sm text-text-secondary">
+              {isXMR
+                ? amountPiconero > 0 && (
+                    <>
+                      <FiatAmount piconero={amountPiconero} className="inline" />
+                    </>
+                  )
+                : amountXMRNum > 0 && (
+                    <>
+                      = {amountXMRNum.toFixed(4)} XMR
+                    </>
+                  )}
+            </p>
           </div>
+          {balanceLoading && !balance && (
+            <p className="text-sm text-text-secondary">Loading balance…</p>
+          )}
           {balance && (
             <p className="text-sm text-text-secondary">
               Available: <XMRAmount piconero={balance.unlocked} /> (spendable)
             </p>
           )}
           <p className="text-xs text-text-secondary">Estimated fee: ~0.0001 XMR</p>
-          {error && <p className="text-sm text-danger">{error}</p>}
-          <Button type="submit" disabled={!addressValid || amountPiconero <= 0 || insufficient}>
+          {error && (
+            <div className="space-y-1">
+              <p className="text-sm text-danger">{error}</p>
+              {transferFailed && (
+                <p className="text-sm text-text-secondary">
+                  Your funds were not sent. You can try again.
+                </p>
+              )}
+            </div>
+          )}
+          <Button
+            type="submit"
+            disabled={
+              balanceLoading ||
+              !addressValid ||
+              amountPiconero <= 0 ||
+              insufficient
+            }
+          >
             Review Transaction
           </Button>
         </form>

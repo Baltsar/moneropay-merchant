@@ -2,6 +2,12 @@
 
 A merchant-facing payment dashboard for accepting Monero payments. Powered by [MoneroPay](https://moneropay.eu).
 
+## Before you start
+
+**Setup flow:** For the full path from zero to a merchant accepting payments (including Tailscale so only the merchant can reach the dashboard URL), see [FLOW.md](./FLOW.md). Use it before building or installing.
+
+**Testing:** For the fastest way to try the app (mock mode, no Docker) and how to test fully (Docker + remote node or VPS), see [docs/TESTING.md](./docs/TESTING.md).
+
 ## Quick Start
 
 ### Prerequisites

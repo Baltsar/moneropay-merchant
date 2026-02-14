@@ -26,6 +26,7 @@ export function SyncProgress({
         <>
           <p className="font-mono text-lg text-text-primary">
             Block {data.height.toLocaleString()} / {targetHeight.toLocaleString()}
+            <span className="ml-2 text-text-secondary">({progress.toFixed(1)}%)</span>
           </p>
           <Progress value={progress} className="h-3" />
           {eta && <p className="text-sm text-text-secondary">{eta}</p>}

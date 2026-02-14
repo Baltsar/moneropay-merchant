@@ -31,7 +31,8 @@ function saveItems(items: RecentPaymentMeta[]) {
 const RecentPaymentsContext = createContext<{
   items: RecentPaymentMeta[]
   addPayment: (meta: RecentPaymentMeta) => void
-}>({ items: [], addPayment: () => {} })
+  removePayment: (address: string) => void
+}>({ items: [], addPayment: () => {}, removePayment: () => {} })
 
 export function RecentPaymentsProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<RecentPaymentMeta[]>(loadItems)
@@ -44,8 +45,16 @@ export function RecentPaymentsProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const removePayment = useCallback((address: string) => {
+    setItems((prev) => {
+      const next = prev.filter((i) => i.address !== address)
+      saveItems(next)
+      return next
+    })
+  }, [])
+
   return (
-    <RecentPaymentsContext.Provider value={{ items, addPayment }}>
+    <RecentPaymentsContext.Provider value={{ items, addPayment, removePayment }}>
       {children}
     </RecentPaymentsContext.Provider>
   )

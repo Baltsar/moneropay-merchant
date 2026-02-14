@@ -8,6 +8,7 @@ import { Onboarding } from '@/pages/Onboarding'
 import { Dashboard } from '@/pages/Dashboard'
 import { Receive } from '@/pages/Receive'
 import { Send } from '@/pages/Send'
+import { Settings } from '@/pages/Settings'
 
 function SyncGate({ children }: { children: React.ReactNode }) {
   const { data: health } = useHealth()
@@ -33,6 +34,7 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="receive" element={<Receive />} />
         <Route path="send" element={<Send />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -33,6 +33,7 @@ export function VolumeChart() {
         <CardTitle className="text-base font-medium text-text-secondary">
           7-Day Volume
         </CardTitle>
+        <p className="text-xs text-text-secondary mt-1">Sample data — volume not yet available from API.</p>
       </CardHeader>
       <CardContent>
         <div className="h-[200px] w-full">

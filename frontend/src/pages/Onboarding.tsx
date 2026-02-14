@@ -80,6 +80,9 @@ export function Onboarding() {
             docker compose up -d
           </code>
           <p className="text-sm text-text-secondary">Checking again in 10 seconds...</p>
+          <p className="text-sm text-text-secondary">
+            If this persists, check that the server is running and the URL is correct.
+          </p>
         </div>
       </div>
     )

@@ -1,12 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
+import { LayoutDashboard, ArrowDownToLine, ArrowUpFromLine, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FIAT_CURRENCIES } from '@/lib/constants'
 import { HealthBadge } from '@/components/dashboard/HealthBadge'
 
 const nav = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/receive', label: 'Receive', icon: ArrowDownToLine },
   { to: '/send', label: 'Send', icon: ArrowUpFromLine },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export function Sidebar({
@@ -47,10 +49,11 @@ export function Sidebar({
             onChange={(e) => onFiatChange(e.target.value)}
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
           >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="MXN">MXN</option>
+            {FIAT_CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code} ({c.symbol})
+              </option>
+            ))}
           </select>
         )}
         <HealthBadge compact />

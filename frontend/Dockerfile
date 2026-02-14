@@ -1,5 +1,7 @@
 # Stage 1: Build
 FROM node:20-alpine AS build
+ARG NODE_MODE=local
+ENV VITE_NODE_MODE=$NODE_MODE
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci

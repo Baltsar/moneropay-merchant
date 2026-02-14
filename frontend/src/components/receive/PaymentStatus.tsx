@@ -19,7 +19,7 @@ export function PaymentStatus({
   description?: string
   onNewPayment: () => void
 }) {
-  const { data, isLoading } = usePaymentStatus(address, true)
+  const { data, isLoading, isError, refetch, isFetching } = usePaymentStatus(address, true)
   const [copied, setCopied] = useState<'address' | 'amount' | null>(null)
 
   const copy = (text: string, key: 'address' | 'amount') => {
@@ -108,6 +108,21 @@ export function PaymentStatus({
 
       {isLoading && !data && (
         <p className="text-center text-sm text-text-secondary">Loading status...</p>
+      )}
+
+      {isError && (
+        <div className="rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-center">
+          <p className="text-sm text-danger">Trouble loading status. Refresh or try again.</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            {isFetching ? 'Retrying…' : 'Retry'}
+          </Button>
+        </div>
       )}
     </div>
   )

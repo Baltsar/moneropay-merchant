@@ -128,6 +128,20 @@ export const mockApi = {
   },
 }
 
-export async function fetchPrice(): Promise<{ usd?: number; eur?: number; gbp?: number; mxn?: number }> {
-  return Promise.resolve({ usd: 165.42, eur: 152.1, gbp: 130.2, mxn: 2850 })
+export async function fetchPrice(): Promise<{
+  usd?: number
+  eur?: number
+  gbp?: number
+  chf?: number
+  cad?: number
+  mxn?: number
+}> {
+  return Promise.resolve({
+    usd: 165.42,
+    eur: 152.1,
+    gbp: 130.2,
+    chf: 145.2,
+    cad: 225.1,
+    mxn: 2850,
+  })
 }

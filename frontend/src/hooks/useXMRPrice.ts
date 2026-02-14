@@ -2,12 +2,20 @@ import { useQuery } from '@tanstack/react-query'
 import { POLL_INTERVALS, FIAT_CURRENCY, USE_MOCK } from '@/lib/constants'
 import { fetchPrice } from '@/api/mock'
 
-const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=monero&vs_currencies=usd,eur,gbp,mxn'
+const VS_CURRENCIES = 'usd,eur,gbp,chf,cad,mxn'
+const COINGECKO_URL = `https://api.coingecko.com/api/v3/simple/price?ids=monero&vs_currencies=${VS_CURRENCIES}`
 
 async function getPrice(): Promise<Record<string, number>> {
   if (USE_MOCK) {
     const p = await fetchPrice()
-    return { usd: p.usd ?? 0, eur: p.eur ?? 0, gbp: p.gbp ?? 0, mxn: p.mxn ?? 0 }
+    return {
+      usd: p.usd ?? 0,
+      eur: p.eur ?? 0,
+      gbp: p.gbp ?? 0,
+      chf: p.chf ?? 0,
+      cad: p.cad ?? 0,
+      mxn: p.mxn ?? 0,
+    }
   }
   const r = await fetch(COINGECKO_URL)
   if (!r.ok) throw new Error('Price fetch failed')
@@ -31,6 +39,14 @@ export function useFiatAmount(piconero: number, currency?: string): string | nul
   const rate = priceMap[cur] ?? priceMap.usd
   if (rate == null) return null
   const xmr = piconero / 1e12
-  const symbol = cur === 'usd' ? '$' : cur === 'eur' ? '€' : cur === 'gbp' ? '£' : '$'
+  const symbols: Record<string, string> = {
+    usd: '$',
+    eur: '€',
+    gbp: '£',
+    chf: 'CHF ',
+    cad: 'C$',
+    mxn: 'MX$',
+  }
+  const symbol = symbols[cur] ?? '$'
   return `~${symbol}${(xmr * rate).toFixed(2)}`
 }

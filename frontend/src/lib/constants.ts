@@ -15,3 +15,13 @@ export const POLL_INTERVALS = {
 
 export const CONFIRMATIONS_REQUIRED = 10
 export const MIN_PER_CONFIRMATION = 2
+
+/** Top fiat currencies for the demo (Receive screen picker + rate fetch) */
+export const FIAT_CURRENCIES = [
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'MXN', name: 'Mexican Peso', symbol: 'MX$' },
+] as const

@@ -88,6 +88,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NODE_MODE: ${NODE_MODE:-local}
     restart: unless-stopped
     ports:
       - "${DASHBOARD_PORT:-3000}:80"
